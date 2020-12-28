@@ -27,7 +27,7 @@ namespace SynBundler
         }
         public static void RunPatch(SynthesisState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            var Config = JObject.Parse(Path.Combine(state.ExtraSettingsDataPath, "config.json")).ToObject<BundlerConfig>();
+            var Config = JObject.Parse(File.ReadAllText(Path.Combine(state.ExtraSettingsDataPath, "config.json"))).ToObject<BundlerConfig>();
             if(Config.AllowExploits) {
                 Console.WriteLine("Allowing exploits allows an infinite EXP farm, temptation is killer, you have been warned");
             }
