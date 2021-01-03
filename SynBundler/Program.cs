@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using SynBundler.Types;
+using System.Threading.Tasks;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
@@ -12,25 +10,17 @@ namespace SynBundler
 {
     class Program
     {
-        public static int Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
-            return SynthesisPipeline.Instance.Patch<ISkyrimMod, ISkyrimModGetter>(
-                args: args,
-                patcher: RunPatch,
-                new UserPreferences() {
-                ActionsForEmptyArgs = new RunDefaultPatcher
-                {
+            return await SynthesisPipeline.Instance.AddRunnabilityCheck(RunabilityCheck).AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch).Run(args, new RunPreferences() {
+                ActionsForEmptyArgs = new RunDefaultPatcher() {
                     IdentifyingModKey = "SynBundler.esp",
                     TargetRelease = GameRelease.SkyrimSE
                 }
             });
         }
-        public static void RunPatch(SynthesisState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            var Config = JObject.Parse(File.ReadAllText(Path.Combine(state.ExtraSettingsDataPath, "config.json"))).ToObject<BundlerConfig>();
-            if(Config.AllowExploits) {
-                Console.WriteLine("Allowing exploits allows an infinite EXP farm, temptation is killer, you have been warned");
-            }
             foreach(var abt in state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides()) {
                 if(abt.Keywords?.Contains(Skyrim.Keyword.VendorItemArrow)??false && !String.IsNullOrEmpty(abt.Name.String)) {
                     var miscitem = state.PatchMod.MiscItems.AddNew($"bundled_{abt.EditorID}");
@@ -59,29 +49,30 @@ namespace SynBundler
                             ParameterOneRecord = abt.FormKey
                         }
                     });
-                    if(Config.AllowExploits) {
-                        var unbundler = state.PatchMod.ConstructibleObjects.AddNew($"unbundle_{abt.EditorID}");
-                        unbundler.CreatedObject = abt.FormKey;
-                        unbundler.CreatedObjectCount = 10;
-                        unbundler.Items = new Noggog.ExtendedList<ContainerEntry>();
-                        unbundler.Items.Add(new ContainerEntry(){
-                            Item = new ContainerItem() {
-                                Item = miscitem.FormKey,
-                                Count =  1
-                            }
-                        });
-                        unbundler.WorkbenchKeyword = Skyrim.Keyword.CraftingTanningRack;
-                        unbundler.Conditions.Add(new ConditionFloat() {
-                            CompareOperator = CompareOperator.GreaterThanOrEqualTo,
-                            ComparisonValue = 1,
-                            Data = new FunctionConditionData() {
-                                Function = (ushort)ConditionData.Function.GetItemCount,
-                                ParameterOneRecord = miscitem.FormKey
-                            }
-                        });
-                    }
+                    var unbundler = state.PatchMod.ConstructibleObjects.AddNew($"unbundle_{abt.EditorID}");
+                    unbundler.CreatedObject = abt.FormKey;
+                    unbundler.CreatedObjectCount = 10;
+                    unbundler.Items = new Noggog.ExtendedList<ContainerEntry>();
+                    unbundler.Items.Add(new ContainerEntry(){
+                        Item = new ContainerItem() {
+                            Item = miscitem.FormKey,
+                            Count =  1
+                        }
+                    });
+                    unbundler.WorkbenchKeyword = Skyrim.Keyword.CraftingTanningRack;
+                    unbundler.Conditions.Add(new ConditionFloat() {
+                        CompareOperator = CompareOperator.GreaterThanOrEqualTo,
+                        ComparisonValue = 1,
+                        Data = new FunctionConditionData() {
+                            Function = (ushort)ConditionData.Function.GetItemCount,
+                            ParameterOneRecord = miscitem.FormKey
+                        }
+                    });
                 }
             }
+        }
+        public static async Task RunabilityCheck(IRunnabilityState state) {
+            state.LoadOrder.AssertHasMod(ModKey.FromNameAndExtension("Skyrim.esm"));
         }
     }
 }
