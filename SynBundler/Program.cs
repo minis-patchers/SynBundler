@@ -12,7 +12,7 @@ namespace SynBundler
     {
         public static async Task<int> Main(string[] args)
         {
-            return await SynthesisPipeline.Instance.AddRunnabilityCheck(RunabilityCheck).AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch).Run(args, new RunPreferences() {
+            return await SynthesisPipeline.Instance.AddRunnabilityCheck(Runable).AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch).Run(args, new RunPreferences() {
                 ActionsForEmptyArgs = new RunDefaultPatcher() {
                     IdentifyingModKey = "SynBundler.esp",
                     TargetRelease = GameRelease.SkyrimSE
@@ -71,8 +71,7 @@ namespace SynBundler
                 }
             }
         }
-        public static async Task RunabilityCheck(IRunnabilityState state) {
-            state.LoadOrder.AssertHasMod(ModKey.FromNameAndExtension("Skyrim.esm"));
+        public static async Task Runable(IRunnabilityState state) {
         }
     }
 }
