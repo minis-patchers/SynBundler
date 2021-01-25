@@ -5,15 +5,18 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Noggog;
 
 namespace SynBundler
 {
-    class Program
+    internal class Program
     {
         public static async Task<int> Main(string[] args)
         {
-            return await SynthesisPipeline.Instance.AddRunnabilityCheck(Runable).AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch).Run(args, new RunPreferences() {
-                ActionsForEmptyArgs = new RunDefaultPatcher() {
+            return await SynthesisPipeline.Instance.AddRunnabilityCheck(Runable).AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch).Run(args, new RunPreferences()
+            {
+                ActionsForEmptyArgs = new RunDefaultPatcher()
+                {
                     IdentifyingModKey = "SynBundler.esp",
                     TargetRelease = GameRelease.SkyrimSE
                 }
@@ -21,11 +24,13 @@ namespace SynBundler
         }
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            foreach(var abt in state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides()) {
-                if(abt.Keywords?.Contains(Skyrim.Keyword.VendorItemArrow)??false && !String.IsNullOrEmpty(abt.Name.String)) {
+            foreach (var abt in state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides())
+            {
+                if (abt.Keywords?.Contains(Skyrim.Keyword.VendorItemArrow) ?? (false && !abt.Name.String.IsNullOrEmpty()))
+                {
                     var miscitem = state.PatchMod.MiscItems.AddNew($"bundled_{abt.EditorID}");
                     miscitem.Model = abt.Model?.DeepCopy();
-                    miscitem.Keywords = new Noggog.ExtendedList<IFormLink<IKeywordGetter>>();
+                    miscitem.Keywords = new ExtendedList<IFormLink<IKeywordGetter>>();
                     miscitem.Keywords?.Add(Skyrim.Keyword.VendorItemArrow);
                     miscitem.Name = $"Bundle of {abt.Name}";
                     miscitem.Value = 10 * abt.Value;
@@ -33,18 +38,24 @@ namespace SynBundler
                     var bundler = state.PatchMod.ConstructibleObjects.AddNew($"bundle_{abt.EditorID}");
                     bundler.CreatedObject = miscitem.FormKey;
                     bundler.CreatedObjectCount = 1;
-                    bundler.Items = new Noggog.ExtendedList<ContainerEntry>();
-                    bundler.Items.Add(new ContainerEntry(){
-                        Item = new ContainerItem() {
-                            Item = abt.FormKey,
-                            Count =  10
+                    bundler.Items = new ExtendedList<ContainerEntry>
+                    {
+                        new ContainerEntry()
+                        {
+                            Item = new ContainerItem()
+                            {
+                                Item = abt.FormKey,
+                                Count = 10
+                            }
                         }
-                    });
+                    };
                     bundler.WorkbenchKeyword = Skyrim.Keyword.CraftingTanningRack;
-                    bundler.Conditions.Add(new ConditionFloat() {
+                    bundler.Conditions.Add(new ConditionFloat()
+                    {
                         CompareOperator = CompareOperator.GreaterThanOrEqualTo,
                         ComparisonValue = 10,
-                        Data = new FunctionConditionData() {
+                        Data = new FunctionConditionData()
+                        {
                             Function = (ushort)ConditionData.Function.GetItemCount,
                             ParameterOneRecord = abt.FormKey
                         }
@@ -52,18 +63,24 @@ namespace SynBundler
                     var unbundler = state.PatchMod.ConstructibleObjects.AddNew($"unbundle_{abt.EditorID}");
                     unbundler.CreatedObject = abt.FormKey;
                     unbundler.CreatedObjectCount = 10;
-                    unbundler.Items = new Noggog.ExtendedList<ContainerEntry>();
-                    unbundler.Items.Add(new ContainerEntry(){
-                        Item = new ContainerItem() {
-                            Item = miscitem.FormKey,
-                            Count =  1
+                    unbundler.Items = new ExtendedList<ContainerEntry>
+                    {
+                        new ContainerEntry()
+                        {
+                            Item = new ContainerItem()
+                            {
+                                Item = miscitem.FormKey,
+                                Count = 1
+                            }
                         }
-                    });
+                    };
                     unbundler.WorkbenchKeyword = Skyrim.Keyword.CraftingTanningRack;
-                    unbundler.Conditions.Add(new ConditionFloat() {
+                    unbundler.Conditions.Add(new ConditionFloat()
+                    {
                         CompareOperator = CompareOperator.GreaterThanOrEqualTo,
                         ComparisonValue = 1,
-                        Data = new FunctionConditionData() {
+                        Data = new FunctionConditionData()
+                        {
                             Function = (ushort)ConditionData.Function.GetItemCount,
                             ParameterOneRecord = miscitem.FormKey
                         }
@@ -71,7 +88,9 @@ namespace SynBundler
                 }
             }
         }
-        public static async Task Runable(IRunnabilityState state) {
+        public static Task Runable(IRunnabilityState state)
+        {
+            return Task.CompletedTask;
         }
     }
 }
