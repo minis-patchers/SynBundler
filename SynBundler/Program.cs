@@ -52,7 +52,7 @@ namespace SynBundler
                         ComparisonValue = 10,
                         Data = new FunctionConditionData()
                         {
-                            Function = ConditionData.Function.GetItemCount,
+                            Function = Condition.Function.GetItemCount,
                             ParameterOneRecord = abt.AsLink()
                         }
                     });
@@ -77,7 +77,7 @@ namespace SynBundler
                         ComparisonValue = 1,
                         Data = new FunctionConditionData()
                         {
-                            Function = ConditionData.Function.GetItemCount,
+                            Function = Condition.Function.GetItemCount,
                             ParameterOneRecord = miscitem.AsLink()
                         }
                     });
