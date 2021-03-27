@@ -20,7 +20,7 @@ namespace SynBundler
         }
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            foreach (var abt in state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides())
+            state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides().ForEach(abt =>
             {
                 if (abt.Keywords?.Contains(Skyrim.Keyword.VendorItemArrow) ?? (false && !abt.Name.String.IsNullOrEmpty()))
                 {
@@ -82,7 +82,7 @@ namespace SynBundler
                         }
                     });
                 }
-            }
+            });
         }
     }
 }
