@@ -22,7 +22,7 @@ namespace SynBundler
         {
             state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides().ForEach(abt =>
             {
-                if ((abt.Keywords?.Contains(Skyrim.Keyword.VendorItemArrow) ?? false) && (!abt.Name?.String.IsNullOrEmpty() ?? false))
+                if (abt.HasKeyword(Skyrim.Keyword.VendorItemArrow) && (!abt.Name?.String.IsNullOrEmpty() ?? false))
                 {
                     var miscitem = state.PatchMod.MiscItems.AddNew($"bundled_{abt.EditorID}");
                     miscitem.Model = abt.Model?.DeepCopy();
